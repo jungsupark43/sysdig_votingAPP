@@ -1,4 +1,4 @@
-name: Sysdig Image Scan
+name: Sysdig Container Scanner (Stable)
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  image-scan:
+  scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Build Docker images
@@ -19,20 +19,28 @@ jobs:
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: Download Sysdig CLI Scanner
-        run: |
-          VERSION=$(curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)
-          echo "Latest version: $VERSION"
-          curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${VERSION}/linux/amd64/sysdig-cli-scanner" -o sysdig-cli-scanner
-          chmod +x sysdig-cli-scanner
-          ./sysdig-cli-scanner --version
-
-      - name: Run Sysdig CLI Scanner
+      - name: Run Sysdig CLI Scanner (Dockerized)
         env:
           SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-          SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
         run: |
-          ./sysdig-cli-scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://voting-app
-          ./sysdig-cli-scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://worker
-          ./sysdig-cli-scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://result
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            quay.io/sysdig/sysdig-cli-scanner:latest \
+              --apiurl https://app.au1.sysdig.com \
+              --token $SECURE_API_TOKEN \
+              docker://voting-app
+
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            quay.io/sysdig/sysdig-cli-scanner:latest \
+              --apiurl https://app.au1.sysdig.com \
+              --token $SECURE_API_TOKEN \
+              docker://worker
+
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            quay.io/sysdig/sysdig-cli-scanner:latest \
+              --apiurl https://app.au1.sysdig.com \
+              --token $SECURE_API_TOKEN \
+              docker://result
 
