@@ -1,1 +1,35 @@
-404: Not Found
+name: Sysdig Image Scan
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  image-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker images
+        run: |
+          docker build -t voting-app ./voting-app
+          docker build -t worker ./worker
+          docker build -t result ./result
+
+      - name: Download Sysdig CLI Scanner
+        run: |
+          curl -sL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest/linux/sysdig-cli-scanner -o scanner
+          chmod +x scanner
+
+      - name: Run Sysdig Scan on voting-app
+        run: ./scanner --token ${{ secrets.SYSDIG_SECURE_TOKEN }} --image voting-app
+
+      - name: Run Sysdig Scan on worker
+        run: ./scanner --token ${{ secrets.SYSDIG_SECURE_TOKEN }} --image worker
+
+      - name: Run Sysdig Scan on result
+        run: ./scanner --token ${{ secrets.SYSDIG_SECURE_TOKEN }} --image result
