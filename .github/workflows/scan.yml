@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout source
+        uses: actions/checkout@v3
 
       - name: Build Docker images
         run: |
@@ -20,10 +21,10 @@ jobs:
 
       - name: Download Sysdig CLI Scanner
         run: |
-          curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner" -o scanner
+          curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner" -o scanner
           chmod +x scanner
 
-      - name: Run Sysdig Scan
+      - name: Run Sysdig Image Scan
         env:
           SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
