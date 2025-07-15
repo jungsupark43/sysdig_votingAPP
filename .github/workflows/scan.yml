@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Build Docker images
@@ -20,18 +20,20 @@ jobs:
           docker build -t result ./result
 
       - name: Download Sysdig CLI Scanner
-        run: | 
-　　　　　version=$(curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)
-    　　　echo "Latest version is $version"
-    　　　curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${version}/linux/amd64/sysdig-cli-scanner" -o sysdig-cli-scanner
-    　　　chmod +x sysdig-cli-scanner
-    　　　./sysdig-cli-scanner --version
-      - name: Run Sysdig Image Scan
+        run: |
+          echo "Fetching latest scanner version..."
+          VERSION=$(curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)
+          echo "Latest version: $VERSION"
+          curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${VERSION}/linux/amd64/sysdig-cli-scanner" -o sysdig-cli-scanner
+          chmod +x sysdig-cli-scanner
+          ./sysdig-cli-scanner --version
+
+      - name: Run Sysdig Scan
         env:
           SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
         run: |
-          ./scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://voting-app
-          ./scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://worker
-          ./scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://result
+          ./sysdig-cli-scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://voting-app
+          ./sysdig-cli-scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://worker
+          ./sysdig-cli-scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://result
 
