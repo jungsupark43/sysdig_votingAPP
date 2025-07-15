@@ -19,7 +19,7 @@ jobs:
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: Run Sysdig CLI Scanner (with CLI flags)
+      - name: Run Sysdig CLI Scanner (Dockerized)
         env:
           SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         run: |
@@ -27,20 +27,20 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             quay.io/sysdig/sysdig-cli-scanner:latest \
               --apiurl https://app.au1.sysdig.com \
-              --client-token $SECURE_API_TOKEN \
+              --token $SECURE_API_TOKEN \
               docker://voting-app
 
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             quay.io/sysdig/sysdig-cli-scanner:latest \
               --apiurl https://app.au1.sysdig.com \
-              --client-token $SECURE_API_TOKEN \
+              --token $SECURE_API_TOKEN \
               docker://worker
 
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             quay.io/sysdig/sysdig-cli-scanner:latest \
               --apiurl https://app.au1.sysdig.com \
-              --client-token $SECURE_API_TOKEN \
+              --token $SECURE_API_TOKEN \
               docker://result
 
