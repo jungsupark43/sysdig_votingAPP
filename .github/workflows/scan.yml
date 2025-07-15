@@ -2,8 +2,7 @@ name: Sysdig Image Scan
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -11,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Build Docker images
         run: |
@@ -22,14 +20,15 @@ jobs:
 
       - name: Download Sysdig CLI Scanner
         run: |
-          curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest/sysdig-cli-scanner-linux-amd64 -o scanner
+          curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner" -o scanner
           chmod +x scanner
 
-      - name: Run Sysdig Scan on voting-app
-        run: ./scanner --token ${{ secrets.SYSDIG_SECURE_TOKEN }} --image voting-app
+      - name: Run Sysdig Scan
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
+        run: |
+          ./scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://voting-app
+          ./scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://worker
+          ./scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://result
 
-      - name: Run Sysdig Scan on worker
-        run: ./scanner --token ${{ secrets.SYSDIG_SECURE_TOKEN }} --image worker
-
-      - name: Run Sysdig Scan on result
-        run: ./scanner --token ${{ secrets.SYSDIG_SECURE_TOKEN }} --image result
