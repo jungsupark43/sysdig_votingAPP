@@ -20,11 +20,12 @@ jobs:
           docker build -t result ./result
 
       - name: Download Sysdig CLI Scanner
-        run: |
-          LATEST_VERSION=$(curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)
-          curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${LATEST_VERSION}/linux/amd64/sysdig-cli-scanner" -o sysdig-cli-scanner
-          chmod +x sysdig-cli-scanner
-          ./sysdig-cli-scanner version
+        run: | 
+　　　　　version=$(curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)
+    　　　echo "Latest version is $version"
+    　　　curl -sSL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${version}/linux/amd64/sysdig-cli-scanner" -o sysdig-cli-scanner
+    　　　chmod +x sysdig-cli-scanner
+    　　　./sysdig-cli-scanner --version
       - name: Run Sysdig Image Scan
         env:
           SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
