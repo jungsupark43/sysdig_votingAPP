@@ -13,6 +13,7 @@ env:
 jobs:
   image-scan:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -30,7 +31,7 @@ jobs:
             quay.io/sysdig/sysdig-cli-scanner:latest \
             scan docker://voting-app \
             --apiurl $SYS_DIG_SECURE_URL \
-            --client-token $SECURE_API_TOKEN
+            --token $SECURE_API_TOKEN
 
       - name: Run Sysdig Scan on worker
         run: |
@@ -39,7 +40,7 @@ jobs:
             quay.io/sysdig/sysdig-cli-scanner:latest \
             scan docker://worker \
             --apiurl $SYS_DIG_SECURE_URL \
-            --client-token $SECURE_API_TOKEN
+            --token $SECURE_API_TOKEN
 
       - name: Run Sysdig Scan on result
         run: |
@@ -48,5 +49,5 @@ jobs:
             quay.io/sysdig/sysdig-cli-scanner:latest \
             scan docker://result \
             --apiurl $SYS_DIG_SECURE_URL \
-            --client-token $SECURE_API_TOKEN
+            --token $SECURE_API_TOKEN
 
