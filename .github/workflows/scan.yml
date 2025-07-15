@@ -28,7 +28,7 @@ jobs:
           SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
         run: |
-          ./scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://voting-app
-          ./scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://worker
-          ./scanner --apiurl $SYS_DIG_SECURE_URL --token $SECURE_API_TOKEN docker://result
+          ./scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://voting-app
+          ./scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://worker
+          ./scanner --apiurl $SYS_DIG_SECURE_URL --auth-token $SECURE_API_TOKEN docker://result
 
