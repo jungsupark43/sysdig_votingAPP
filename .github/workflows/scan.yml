@@ -1,4 +1,4 @@
-name: Sysdig Container Scanner (Stable)
+name: Sysdig Image Scan
 
 on:
   push:
@@ -21,26 +21,27 @@ jobs:
 
       - name: Run Sysdig CLI Scanner (Dockerized)
         env:
-          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          SYSDIG_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          SYSDIG_API_URL: https://app.au1.sysdig.com
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            quay.io/sysdig/sysdig-cli-scanner:latest \
-              --apiurl https://app.au1.sysdig.com \
-              --token $SECURE_API_TOKEN \
+            -e SYSDIG_API_TOKEN \
+            -e SYSDIG_API_URL \
+            quay.io/sysdig/sysdig-cli-scanner \
               docker://voting-app
 
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            quay.io/sysdig/sysdig-cli-scanner:latest \
-              --apiurl https://app.au1.sysdig.com \
-              --token $SECURE_API_TOKEN \
+            -e SYSDIG_API_TOKEN \
+            -e SYSDIG_API_URL \
+            quay.io/sysdig/sysdig-cli-scanner \
               docker://worker
 
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            quay.io/sysdig/sysdig-cli-scanner:latest \
-              --apiurl https://app.au1.sysdig.com \
-              --token $SECURE_API_TOKEN \
+            -e SYSDIG_API_TOKEN \
+            -e SYSDIG_API_URL \
+            quay.io/sysdig/sysdig-cli-scanner \
               docker://result
 
