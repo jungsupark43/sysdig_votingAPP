@@ -22,7 +22,7 @@ jobs:
 
       - name: Download Sysdig CLI Scanner
         run: |
-          curl -sLo scanner https://download.sysdig.com/scanning/sysdig-cli-scanner/latest/sysdig-cli-scanner-linux-amd64
+          curl -sSL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest/sysdig-cli-scanner-linux-amd64 -o scanner
           chmod +x scanner
 
       - name: Run Sysdig Scan on voting-app
