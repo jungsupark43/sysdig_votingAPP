@@ -16,7 +16,7 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker build -t voting-app ./voting-app
+          docker build -t voting-app ./vote
           docker build -t worker ./worker
           docker build -t result ./result
 
