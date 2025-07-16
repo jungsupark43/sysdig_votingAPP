@@ -1,18 +1,14 @@
 name: Sysdig Image Scan
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   image-scan:
     runs-on: ubuntu-latest
-
-    env:
-      SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
-      SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
 
     steps:
       - name: 🛎️ Checkout code
@@ -24,45 +20,48 @@ jobs:
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: 🔍 Scan voting-app with Sysdig
+      - name: 🛡️ Scan voting-app with Sysdig
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
-            -v "${{ github.workspace }}/scan-logs:/home/nonroot/scan-logs" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
+            -e SECURE_API_TOKEN=$SECURE_API_TOKEN \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              --apiurl $SYS_DIG_SECURE_URL \
-              --loglevel debug \
+              --apiurl https://app.au1.sysdig.com \
+              --loglevel info \
               --skiptlsverify \
               docker://voting-app
 
-      - name: 🔍 Scan worker with Sysdig
+      - name: 🛡️ Scan worker with Sysdig
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
-            -v "${{ github.workspace }}/scan-logs:/home/nonroot/scan-logs" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
+            -e SECURE_API_TOKEN=$SECURE_API_TOKEN \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              --apiurl $SYS_DIG_SECURE_URL \
-              --loglevel debug \
+              --apiurl https://app.au1.sysdig.com \
+              --loglevel info \
               --skiptlsverify \
               docker://worker
 
-      - name: 🔍 Scan result with Sysdig
+      - name: 🛡️ Scan result with Sysdig
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
-            -v "${{ github.workspace }}/scan-logs:/home/nonroot/scan-logs" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
+            -e SECURE_API_TOKEN=$SECURE_API_TOKEN \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              --apiurl $SYS_DIG_SECURE_URL \
-              --loglevel debug \
+              --apiurl https://app.au1.sysdig.com \
+              --loglevel info \
               --skiptlsverify \
               docker://result
 
