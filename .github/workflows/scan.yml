@@ -24,6 +24,8 @@ jobs:
           docker build -t result ./result
 
       - name: 🔍 DEBUG: Check if SECURE_API_TOKEN is available
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
           echo "🔍 Token Length: ${#SECURE_API_TOKEN}"
           echo "🔍 Token Head: ${SECURE_API_TOKEN::5}"
@@ -33,8 +35,6 @@ jobs:
           else
             echo "✅ SECURE_API_TOKEN is available."
           fi
-        env:
-          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
 
       - name: 🔍 Run Sysdig Scan (voting-app)
         run: |
