@@ -17,7 +17,7 @@ jobs:
       - name: 🛎️ Checkout code
         uses: actions/checkout@v3
 
-      - name: 🐳 Build Docker images
+      - name: 🏗️ Build Docker images
         run: |
           docker build -t voting-app ./vote
           docker build -t worker ./worker
@@ -41,37 +41,12 @@ jobs:
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
+            -v "$(pwd)/scan-logs:/home/nonroot/scan-logs" \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
               --apiurl $SYS_DIG_SECURE_URL \
-              --skiptlsverify \
               --loglevel debug \
+              --skiptlsverify \
               docker://voting-app
-
-      - name: 🔍 Run Sysdig Scan (worker)
-        run: |
-          docker run --rm \
-            --platform linux/amd64 \
-            --user 0 \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
-            quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              --apiurl $SYS_DIG_SECURE_URL \
-              --skiptlsverify \
-              --loglevel debug \
-              docker://worker
-
-      - name: 🔍 Run Sysdig Scan (result)
-        run: |
-          docker run --rm \
-            --platform linux/amd64 \
-            --user 0 \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
-            quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              --apiurl $SYS_DIG_SECURE_URL \
-              --skiptlsverify \
-              --loglevel debug \
-              docker://result
 
