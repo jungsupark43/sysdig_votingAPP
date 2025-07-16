@@ -11,48 +11,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛎️ Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 🧱 Build Docker images
+      - name: Build Docker images
         run: |
           docker build -t voting-app ./vote
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: 🔍 Scan with Sysdig (voting-app)
+      - name: Run Sysdig Scan (voting-app)
         run: |
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
+            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
               --apiurl https://app.au1.sysdig.com \
               --loglevel info \
               --skiptlsverify \
               docker://voting-app
 
-      - name: 🔍 Scan with Sysdig (worker)
+      - name: Run Sysdig Scan (worker)
         run: |
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
+            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
               --apiurl https://app.au1.sysdig.com \
               --loglevel info \
               --skiptlsverify \
               docker://worker
 
-      - name: 🔍 Scan with Sysdig (result)
+      - name: Run Sysdig Scan (result)
         run: |
           docker run --rm \
             --platform linux/amd64 \
             --user 0 \
+            -e SECURE_API_TOKEN=${{ secrets.SECURE_API_TOKEN }} \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
               --apiurl https://app.au1.sysdig.com \
               --loglevel info \
