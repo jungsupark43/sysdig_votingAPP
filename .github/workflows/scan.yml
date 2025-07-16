@@ -6,15 +6,15 @@ on:
   workflow_dispatch:
 
 env:
-  SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
   SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
+  SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
 
 jobs:
-  image-scan:
+  scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v3
 
       - name: Build Docker images
@@ -23,30 +23,26 @@ jobs:
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: Scan voting-app
+      - name: Run Sysdig CLI Scanner via Docker
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            quay.io/sysdig/sysdig-cli-scanner:latest \
-            scan docker://voting-app \
-              --apiurl "$SYS_DIG_SECURE_URL" \
-              --token "$SECURE_API_TOKEN"
+            quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
+              --apiurl $SYS_DIG_SECURE_URL \
+              --token $SECURE_API_TOKEN \
+              docker://voting-app
 
-      - name: Scan worker
-        run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            quay.io/sysdig/sysdig-cli-scanner:latest \
-            scan docker://worker \
-              --apiurl "$SYS_DIG_SECURE_URL" \
-              --token "$SECURE_API_TOKEN"
+            quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
+              --apiurl $SYS_DIG_SECURE_URL \
+              --token $SECURE_API_TOKEN \
+              docker://worker
 
-      - name: Scan result
-        run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            quay.io/sysdig/sysdig-cli-scanner:latest \
-            scan docker://result \
-              --apiurl "$SYS_DIG_SECURE_URL" \
-              --token "$SECURE_API_TOKEN"
+            quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
+              --apiurl $SYS_DIG_SECURE_URL \
+              --token $SECURE_API_TOKEN \
+              docker://result
 
