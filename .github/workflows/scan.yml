@@ -28,7 +28,7 @@ jobs:
           SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
         run: |
           echo "🔍 Token Length: ${#SECURE_API_TOKEN}"
-          echo "🔍 Token Head: ${SECURE_API_TOKEN::5}"
+          echo "🔍 Token Head: ${SECURE_API_TOKEN:0:5}"
           if [ -z "$SECURE_API_TOKEN" ]; then
             echo "❌ SECURE_API_TOKEN is NOT set!"
             exit 1
