@@ -25,15 +25,15 @@ jobs:
 
       - name: Debug
         env:
-          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
+          SYSDIG_SECURE_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         run: |
-          echo "🔍 Token Length: ${#SECURE_API_TOKEN}"
-          echo "🔍 Token Head: ${SECURE_API_TOKEN:0:5}"
-          if [ -z "$SECURE_API_TOKEN" ]; then
-            echo "❌ SECURE_API_TOKEN is NOT set!"
+          echo "🔍 Token Length: ${#SYSDIG_SECURE_TOKEN}"
+          echo "🔍 Token Head: ${SYSDIG_SECURE_TOKEN:0:5}"
+          if [ -z "$SYSDIG_SECURE_TOKEN" ]; then
+            echo "❌ SYSDIG_SECURE_TOKEN is NOT set!"
             exit 1
           else
-            echo "✅ SECURE_API_TOKEN is available."
+            echo "✅ SYSDIG_SECURE_TOKEN is available."
           fi
 
       - name: Run Sysdig Scan (voting-app)
@@ -43,7 +43,7 @@ jobs:
             --user 0 \
             -v "$(pwd)/scan-logs:/home/nonroot/scan-logs" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
+            -e SYSDIG_SECURE_TOKEN="${{ secrets.SYSDIG_SECURE_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
               --apiurl "$SYS_DIG_SECURE_URL" \
               --loglevel debug \
