@@ -23,9 +23,11 @@ jobs:
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: Set SECURE_API_TOKEN env and debug
+      - 
+        name: Debug: Check if SECURE_API_TOKEN is available
+        env:
+          SECURE_API_TOKEN: "${{ secrets.SECURE_API_TOKEN }}"
         run: |
-          export SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}"
           echo "🔍 Token Length: ${#SECURE_API_TOKEN}"
           echo "🔍 Token Head: ${SECURE_API_TOKEN:0:5}"
           if [ -z "$SECURE_API_TOKEN" ]; then
@@ -37,15 +39,5 @@ jobs:
 
       - name: Run Sysdig Scan (voting-app)
         run: |
-          docker run --rm \
-            --platform linux/amd64 \
-            --user 0 \
-            -v "$(pwd)/scan-logs:/home/nonroot/scan-logs" \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
-            quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              --apiurl "$SYS_DIG_SECURE_URL" \
-              --loglevel debug \
-              --skiptlsverify \
-              docker://voting-app
+          docker run --rm             --platform linux/amd64             --user 0             -v "$(pwd)/scan-logs:/home/nonroot/scan-logs"             -v /var/run/docker.sock:/var/run/docker.sock             -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}"             quay.io/sysdig/sysdig-cli-scanner:1.22.4               --apiurl "$SYS_DIG_SECURE_URL"               --loglevel debug               --skiptlsverify               docker://voting-app
 
