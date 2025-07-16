@@ -1,42 +1,42 @@
-name: Sysdig Image Scan
+name: Voting App Build & Scan
 
 on:
   push:
     branches:
       - main
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  image-scan:
+  build-and-scan:
     runs-on: ubuntu-latest
 
     env:
       SYS_DIG_SECURE_URL: https://app.au1.sysdig.com
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Build Docker images
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to DockerHub (optional)
+        if: secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Voting App images
         run: |
           docker build -t voting-app ./vote
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: Debug
+      - name: Scan image with Sysdig CLI Scanner
         env:
           SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
-        run: |
-          echo "🔍 Token Length: ${#SECURE_API_TOKEN}"
-          echo "🔍 Token Head: ${SECURE_API_TOKEN:0:5}"
-          if [ -z "$SECURE_API_TOKEN" ]; then
-            echo "❌ SECURE_API_TOKEN is NOT set!"
-            exit 1
-          else
-            echo "✅ SECURE_API_TOKEN is available."
-          fi
-
-      - name: Run Sysdig Scan (voting-app)
         run: |
           docker run --rm \
             --platform linux/amd64 \
@@ -46,7 +46,7 @@ jobs:
             -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
               --apiurl "$SYS_DIG_SECURE_URL" \
-              --loglevel debug \
+              --loglevel info \
               --skiptlsverify \
               docker://voting-app
 
