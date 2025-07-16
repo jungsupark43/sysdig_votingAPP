@@ -6,12 +6,12 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  SYSDIG_SECURE_URL: https://app.au1.sysdig.com
-
 jobs:
   image-scan:
     runs-on: ubuntu-latest
+
+    env:
+      SYSDIG_SECURE_URL: https://app.au1.sysdig.com
 
     steps:
       - name: Checkout code
@@ -23,27 +23,27 @@ jobs:
           docker build -t worker ./worker
           docker build -t result ./result
 
-      - name: Run Sysdig Scan on voting-app
+      - name: Scan voting-app image with Sysdig CLI
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              scan --apiurl $SYSDIG_SECURE_URL docker://voting-app
+            scan --apiurl "${SYSDIG_SECURE_URL}" docker://voting-app
 
-      - name: Run Sysdig Scan on worker
+      - name: Scan worker image with Sysdig CLI
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              scan --apiurl $SYSDIG_SECURE_URL docker://worker
+            scan --apiurl "${SYSDIG_SECURE_URL}" docker://worker
 
-      - name: Run Sysdig Scan on result
+      - name: Scan result image with Sysdig CLI
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e SECURE_API_TOKEN="${{ secrets.SECURE_API_TOKEN }}" \
             quay.io/sysdig/sysdig-cli-scanner:1.22.4 \
-              scan --apiurl $SYSDIG_SECURE_URL docker://result
+            scan --apiurl "${SYSDIG_SECURE_URL}" docker://result
 
