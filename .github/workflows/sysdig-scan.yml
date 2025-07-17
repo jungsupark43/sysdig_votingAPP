@@ -34,7 +34,7 @@ jobs:
           -v ${{ github.workspace }}/vote-image.tar:/tmp/vote-image.tar \
           quay.io/sysdig/sysdig-cli-scanner:latest \
           --apiurl ${{ secrets.SYSDIG_API_URL }} \
-          --input /tmp/vote-image.tar
+          --image-archive /tmp/vote-image.tar
 
     - name: Scan IaC (k8s-specifications)
       run: |
