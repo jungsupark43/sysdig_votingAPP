@@ -25,14 +25,16 @@ jobs:
     - name: Build vote image
       run: |
         docker build -t vote-image ./vote
+        docker save vote-image -o vote-image.tar
 
     - name: Scan Docker image with Sysdig
       run: |
         docker run --rm \
           -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }} \
+          -v ${{ github.workspace }}/vote-image.tar:/tmp/vote-image.tar \
           quay.io/sysdig/sysdig-cli-scanner:latest \
           --apiurl ${{ secrets.SYSDIG_API_URL }} \
-          vote-image
+          --input /tmp/vote-image.tar
 
     - name: Scan IaC (k8s-specifications)
       run: |
