@@ -9,7 +9,7 @@ on:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    name: Scan vote / worker / result + IaC
+    name: Scan vote / worker / result + IaC (stable, no version pin)
 
     steps:
       - name: Checkout source
@@ -33,7 +33,6 @@ jobs:
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
           stop-on-processing-error: true
-          cli-scanner-version: 1.22.3
 
       # Scan worker
       - name: Scan worker image with Sysdig
@@ -43,7 +42,6 @@ jobs:
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
           stop-on-processing-error: true
-          cli-scanner-version: 1.22.3
 
       # Scan result
       - name: Scan result image with Sysdig
@@ -53,17 +51,14 @@ jobs:
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
           stop-on-processing-error: true
-          cli-scanner-version: 1.22.3
 
-      # Scan IaC
+      # Scan IaC (k8s-specifications)
       - name: Scan Kubernetes IaC manifests
         uses: sysdiglabs/scan-action@v6
-        continue-on-error: true  # IaC scan failure should not block main scan
+        continue-on-error: true
         with:
           mode: iac
           iac-scan-path: k8s-specifications
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
           stop-on-processing-error: true
-          cli-scanner-version: 1.23.3
-
