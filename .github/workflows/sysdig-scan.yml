@@ -1,4 +1,4 @@
-name: Sysdig CI Scan
+name: Sysdig Tech Assessment CI
 
 on:
   push:
@@ -12,24 +12,33 @@ on:
 
 jobs:
   scan:
-    name: Sysdig Scan Docker + IaC (with docker.sock)
+    name: Build & Scan Docker Images + IaC
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build vote image
+      - name: Build Docker images
         run: |
           docker build -t vote-image ./vote
-          docker tag vote-image vote-image:ci
+          docker build -t worker-image ./worker
+          docker build -t result-image ./result
 
-      - name: Scan Docker image using docker.sock
+      - name: Scan vote image
         run: |
-          docker run --rm             -v /var/run/docker.sock:/var/run/docker.sock             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             quay.io/sysdig/sysdig-cli-scanner:latest             --apiurl ${{ secrets.SYSDIG_API_URL }}             vote-image:ci
+          docker run --rm             quay.io/sysdig/secure-inline-scan:2             vote-image             --sysdig-token ${{ secrets.SYSDIG_SECURE_TOKEN }}             --sysdig-url ${{ secrets.SYSDIG_API_URL }}
+
+      - name: Scan worker image
+        run: |
+          docker run --rm             quay.io/sysdig/secure-inline-scan:2             worker-image             --sysdig-token ${{ secrets.SYSDIG_SECURE_TOKEN }}             --sysdig-url ${{ secrets.SYSDIG_API_URL }}
+
+      - name: Scan result image
+        run: |
+          docker run --rm             quay.io/sysdig/secure-inline-scan:2             result-image             --sysdig-token ${{ secrets.SYSDIG_SECURE_TOKEN }}             --sysdig-url ${{ secrets.SYSDIG_API_URL }}
 
       - name: Scan IaC (k8s-specifications)
         run: |
