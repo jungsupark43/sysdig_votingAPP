@@ -1,4 +1,4 @@
-name: Sysdig Tech Assessment CI (CLI Scanner)
+name: Sysdig Scan (Official Action)
 
 on:
   push:
@@ -12,50 +12,31 @@ on:
 
 jobs:
   scan:
-    name: Scan vote/worker/result with CLI Scanner + IaC
+    name: Docker + IaC Scan via Sysdig Action
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and save Docker images
+      - name: Build vote Docker image
         run: |
-          docker build -t vote-image ./vote
-          docker build -t worker-image ./worker
-          docker build -t result-image ./result
-          docker save vote-image -o vote-image.tar
-          docker save worker-image -o worker-image.tar
-          docker save result-image -o result-image.tar
+          docker build ./vote -t vote-app:${{ github.sha }}
 
-      - name: Download Sysdig CLI Scanner (latest Linux amd64)
-        run: |
-          curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner"
-          chmod +x sysdig-cli-scanner
+      - name: Scan vote image with Sysdig
+        uses: sysdiglabs/scan-action@v6
+        with:
+          image-tag: vote-app:${{ github.sha }}
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
 
-      - name: Scan vote image (.tar) with CLI Scanner
-        run: |
-          ./sysdig-cli-scanner             --standalone             --input-file vote-image.tar             vote-image:ci
-        env:
-          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-
-      - name: Scan worker image (.tar) with CLI Scanner
-        run: |
-          ./sysdig-cli-scanner             --standalone             --input-file worker-image.tar             worker-image:ci
-        env:
-          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-
-      - name: Scan result image (.tar) with CLI Scanner
-        run: |
-          ./sysdig-cli-scanner             --standalone             --input-file result-image.tar             result-image:ci
-        env:
-          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-
-      - name: Scan IaC (k8s-specifications)
-        run: |
-          ./sysdig-cli-scanner             --apiurl ${{ secrets.SYSDIG_API_URL }}             --iac scan ./k8s-specifications
-        env:
-          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+      - name: Scan Kubernetes IaC manifests
+        uses: sysdiglabs/scan-action@v6
+        with:
+          mode: iac
+          cli-scanner-version: 1.24.2
+          iac-scan-path: k8s-specifications
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
