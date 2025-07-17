@@ -12,7 +12,7 @@ on:
 
 jobs:
   scan:
-    name: Sysdig Scan Docker + IaC (Docker version)
+    name: Sysdig Scan Docker + IaC (loaded image method)
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +27,15 @@ jobs:
           docker build -t vote-image ./vote
           docker save vote-image -o vote-image.tar
 
-      - name: Scan Docker image from archive with Sysdig
+      - name: Load and tag image
         run: |
-          docker run --rm             --platform linux/amd64             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             -v ${{ github.workspace }}/vote-image.tar:/tmp/vote-image.tar             quay.io/sysdig/sysdig-cli-scanner:latest             --standalone             --input-file /tmp/vote-image.tar             vote-image:ci
+          docker load -i vote-image.tar
+          docker tag vote-image:latest vote-image:ci
+
+      - name: Scan Docker image using tag
+        run: |
+          docker run --rm             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             quay.io/sysdig/sysdig-cli-scanner:latest             --apiurl ${{ secrets.SYSDIG_API_URL }}             vote-image:ci
 
       - name: Scan IaC (k8s-specifications)
         run: |
-          docker run --rm             --platform linux/amd64             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             -v ${{ github.workspace }}:/iac             quay.io/sysdig/sysdig-cli-scanner:latest             --apiurl ${{ secrets.SYSDIG_API_URL }}             --iac scan /iac/k8s-specifications
+          docker run --rm             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             -v ${{ github.workspace }}:/iac             quay.io/sysdig/sysdig-cli-scanner:latest             --apiurl ${{ secrets.SYSDIG_API_URL }}             --iac scan /iac/k8s-specifications
