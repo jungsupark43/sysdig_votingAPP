@@ -16,34 +16,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: Build vote image
-      run: |
-        docker build -t vote-image ./vote
-        docker save vote-image -o vote-image.tar
+      - name: Build vote image
+        run: |
+          docker build -t vote-image ./vote
+          docker save vote-image -o vote-image.tar
 
-    - name: Scan Docker image from archive with Sysdig
-      run: |
-        docker run --rm \
-　　　　　--platform linux/amd64 \
-          -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }} \
-          -v ${{ github.workspace }}/vote-image.tar:/tmp/vote-image.tar \
-          quay.io/sysdig/sysdig-cli-scanner:latest \
-          --standalone \
-          --input-file /tmp/vote-image.tar \
-          vote-image:ci
+      - name: Scan Docker image with Sysdig (latest + amd64)
+        run: |
+          docker run --rm             --platform linux/amd64             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             -v ${{ github.workspace }}/vote-image.tar:/tmp/vote-image.tar             quay.io/sysdig/sysdig-cli-scanner:latest             --standalone             --input-file /tmp/vote-image.tar             vote-image:ci
 
-    - name: Scan IaC (k8s-specifications)
-      run: |
-        docker run --rm \
-          --platform linux/amd64 \
-          -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }} \
-          -v ${{ github.workspace }}:/iac \
-          quay.io/sysdig/sysdig-cli-scanner:latest \
-          --apiurl ${{ secrets.SYSDIG_API_URL }} \
-          --iac scan /iac/k8s-specifications
+      - name: Scan IaC (k8s-specifications)
+        run: |
+          docker run --rm             --platform linux/amd64             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}             -v ${{ github.workspace }}:/iac             quay.io/sysdig/sysdig-cli-scanner:latest             --apiurl ${{ secrets.SYSDIG_API_URL }}             --iac scan /iac/k8s-specifications
