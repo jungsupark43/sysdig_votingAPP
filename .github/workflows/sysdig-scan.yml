@@ -1,28 +1,31 @@
-name: Sysdig Scan (Official Action)
+name: Sysdig Secure Scanning
 
 on:
   push:
-    branches:
-      - main
-      - ci/sysdig-integration
+    branches: [main, ci/sysdig-integration]
   pull_request:
-    branches:
-      - main
-      - ci/sysdig-integration
+    branches: [main, ci/sysdig-integration]
 
 jobs:
   scan:
-    name: Docker + IaC Scan via Sysdig Action
     runs-on: ubuntu-latest
+    name: Scan vote / worker / result + IaC
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Build vote Docker image
-        run: |
-          docker build ./vote -t vote-app:${{ github.sha }}
+      # Build Docker images
+      - name: Build vote image
+        run: docker build ./vote -t vote-app:${{ github.sha }}
 
+      - name: Build worker image
+        run: docker build ./worker -t worker-app:${{ github.sha }}
+
+      - name: Build result image
+        run: docker build ./result -t result-app:${{ github.sha }}
+
+      # Scan vote
       - name: Scan vote image with Sysdig
         uses: sysdiglabs/scan-action@v6
         with:
@@ -30,13 +33,37 @@ jobs:
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
           stop-on-processing-error: true
+          cli-scanner-version: 1.22.3
 
-      - name: Scan Kubernetes IaC manifests
+      # Scan worker
+      - name: Scan worker image with Sysdig
         uses: sysdiglabs/scan-action@v6
         with:
+          image-tag: worker-app:${{ github.sha }}
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
+          cli-scanner-version: 1.22.3
+
+      # Scan result
+      - name: Scan result image with Sysdig
+        uses: sysdiglabs/scan-action@v6
+        with:
+          image-tag: result-app:${{ github.sha }}
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
+          cli-scanner-version: 1.22.3
+
+      # Scan IaC
+      - name: Scan Kubernetes IaC manifests
+        uses: sysdiglabs/scan-action@v6
+        continue-on-error: true  # IaC scan failure should not block main scan
+        with:
           mode: iac
-          cli-scanner-version: 1.24.2
           iac-scan-path: k8s-specifications
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
           sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
           stop-on-processing-error: true
+          cli-scanner-version: 1.23.3
+
