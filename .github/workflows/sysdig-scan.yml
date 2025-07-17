@@ -27,15 +27,19 @@ jobs:
           docker build -t vote-image ./vote
           docker save vote-image -o vote-image.tar
 
-      - name: Download Sysdig CLI Scanner
+      - name: Download Sysdig CLI Scanner (latest for amd64)
         run: |
-          curl -LO https://download.sysdig.com/scanning/sysdig-cli-scanner/latest/linux/sysdig-cli-scanner
+          curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner"
           chmod +x sysdig-cli-scanner
 
-      - name: Scan Docker image from archive with Sysdig (binary)
+      - name: Scan Docker image from archive
         run: |
-          ./sysdig-cli-scanner             --standalone             --input-file vote-image.tar             vote-image:ci             --console-log             --detailed-policies-eval             --full-vulns-table             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}
+          ./sysdig-cli-scanner             --standalone             --input-file vote-image.tar             vote-image:ci             --console-log             --detailed-policies-eval             --full-vulns-table
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
 
       - name: Scan IaC (k8s-specifications)
         run: |
-          ./sysdig-cli-scanner             --apiurl ${{ secrets.SYSDIG_API_URL }}             --iac scan ./k8s-specifications             -e SECURE_API_TOKEN=${{ secrets.SYSDIG_SECURE_TOKEN }}
+          ./sysdig-cli-scanner             --apiurl ${{ secrets.SYSDIG_API_URL }}             --iac scan ./k8s-specifications
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
