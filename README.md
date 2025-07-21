@@ -63,3 +63,16 @@ The voting application only accepts one vote per client browser. It does not reg
 This isn't an example of a properly architected perfectly designed distributed app... it's just a simple
 example of the various types of pieces and languages you might see (queues, persistent data, etc), and how to
 deal with them in Docker at a basic level.
+
+
+## 📄 Sysdig Tech Assessment 成果レポート
+
+このリポジトリでは、Sysdig Secure を活用したセキュリティ検証（IaC / CI/CD / Runtime）を段階的に実施しました。
+
+| フェーズ | 内容 | 成果リンク |
+|----------|------|-------------|
+| A        | IaC 脆弱性スキャン + 初期Runtime Policy検証 | [assessment-report.md](./docs/assessment-report.md#フェーズa) |
+| B        | GitHub ActionsによるCI統合スキャン | [assessment-report.md](./docs/assessment-report.md#フェーズb) |
+| C        | Reverse ShellによるRuntime Threatの検出 | [assessment-report.md](./docs/assessment-report.md#フェーズc) |
+
+成果詳細：[`docs/assessment-report.md`](./docs/assessment-report.md)
