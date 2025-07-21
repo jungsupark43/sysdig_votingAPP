@@ -1,0 +1,64 @@
+name: Sysdig Secure Scanning
+
+on:
+  push:
+    branches: [main, ci/sysdig-integration]
+  pull_request:
+    branches: [main, ci/sysdig-integration]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    name: Scan vote / worker / result + IaC (stable, no version pin)
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      # Build Docker images
+      - name: Build vote image
+        run: docker build ./vote -t vote-app:${{ github.sha }}
+
+      - name: Build worker image
+        run: docker build ./worker -t worker-app:${{ github.sha }}
+
+      - name: Build result image
+        run: docker build ./result -t result-app:${{ github.sha }}
+
+      # Scan vote
+      - name: Scan vote image with Sysdig
+        uses: sysdiglabs/scan-action@v6
+        with:
+          image-tag: vote-app:${{ github.sha }}
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
+
+      # Scan worker
+      - name: Scan worker image with Sysdig
+        uses: sysdiglabs/scan-action@v6
+        with:
+          image-tag: worker-app:${{ github.sha }}
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
+
+      # Scan result
+      - name: Scan result image with Sysdig
+        uses: sysdiglabs/scan-action@v6
+        with:
+          image-tag: result-app:${{ github.sha }}
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
+
+      # Scan IaC (k8s-specifications)
+      - name: Scan Kubernetes IaC manifests
+        uses: sysdiglabs/scan-action@v6
+        continue-on-error: true
+        with:
+          mode: iac
+          iac-scan-path: k8s-specifications
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          sysdig-secure-url: ${{ secrets.SYSDIG_API_URL }}
+          stop-on-processing-error: true
