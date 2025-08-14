@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SYSDIG_SECURE_URL: https://secure.sysdig.com  # 리전에 맞게 변경 [1]
+      SYSDIG_SECURE_URL: https://app.au1.sysdig.com/  # 리전에 맞게 변경 [1]
       SYSDIG_SECURE_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
       IMAGE_NAME: pr-scan:${{ github.event.number }}
 
@@ -64,7 +64,7 @@ jobs:
           SYSDIG_SECURE_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         run: |
           ./sysdig-cli-scanner --iac --apiurl https://app.au1.sysdig.com .
-        
+
           continue-on-error: true  # 실패해도 PR 차단 안 함
 
       # SARIF 업로드(스캔 실패해도 결과 업로드) [1][2]
@@ -74,4 +74,3 @@ jobs:
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
         continue-on-error: true
-
