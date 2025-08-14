@@ -1,0 +1,24 @@
+name: Scan IaC files
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  scan-iac:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Sysdig CLI Scanner
+        run: |
+          curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner"
+          chmod +x ./sysdig-cli-scanner
+
+      - name: Run IaC Scan
+        env:
+          SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
+        run: |
+          ./sysdig-cli-scanner --iac --apiurl https://app.au1.sysdig.com .
+          # '.' 은 현재 리포지토리 전체를 스캔하라는 의미
