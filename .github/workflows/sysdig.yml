@@ -1,8 +1,11 @@
 name: Scan IaC files
 
 on:
-  push:
-    branches: [ main ]
+  pull_request:
+    types: [ opened, reopened, synchronize ]
+    branches: [master, main ]
+  #push:
+  #  branches: [ main ]
 
 jobs:
   scan-iac:
