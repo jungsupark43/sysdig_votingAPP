@@ -8,10 +8,9 @@ on:
 jobs:
   sysdig-cli-scan:
     runs-on: ubuntu-latest
-
     env:
-      SYSDIG_SECURE_URL: https://app.au1.sysdig.com/  # 리전에 맞게 변경 [1]
-      SYSDIG_SECURE_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+      SYSDIG_SECURE_URL: https://app.au1.sysdig.com/ # 리전에 맞게 변경
+      SECURE_API_TOKEN: ${{ secrets.SECURE_API_TOKEN }}
       IMAGE_NAME: pr-scan:${{ github.event.number }}
 
     steps:
@@ -27,25 +26,24 @@ jobs:
       - name: Build image for scan (local)
         run: |
           docker build -t "$IMAGE_NAME" .
-        continue-on-error: true  # 빌드 실패 시에도 이후 단계 진행
+        continue-on-error: true # 빌드 실패 시에도 이후 단계 진행
 
       - name: Download sysdig-cli-scanner
         run: |
           mkdir -p $GITHUB_WORKSPACE/bin
           curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt -o latest_version.txt
           VER=$(cat latest_version.txt)
-          curl -L -o $GITHUB_WORKSPACE/bin/sysdig-cli-scanner "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${VER}/linux/amd64/sysdig-cli-scanner"
+          curl -L -o $GITHUB_WORKSPACE/bin/sysdig-cli-scanner \
+            "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${VER}/linux/amd64/sysdig-cli-scanner"
           chmod +x $GITHUB_WORKSPACE/bin/sysdig-cli-scanner
-        continue-on-error: false  # 바이너리 다운로드는 반드시 필요
-      # 캐시 디렉토리 준비(데이터베이스/스캐너 캐시) [7]
+        continue-on-error: false # 필수 단계
+
       - name: Prepare cache folders
         run: |
           mkdir -p $GITHUB_WORKSPACE/cache/db
           mkdir -p $GITHUB_WORKSPACE/cache/scanner-cache
 
       - name: Scan container image (do not block PR)
-        env:
-          SYSDIG_SECURE_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         run: |
           set -e
           if docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
@@ -57,20 +55,20 @@ jobs:
           else
             echo "Image $IMAGE_NAME not found, skipping image scan."
           fi
-        continue-on-error: true  # 정책 위반/에러가 있어도 실패 처리 안 함 [1][7]
+        continue-on-error: true
 
-      - name: Scan source directory (IaC/SCA-like dir scan, do not block PR)
-        env:
-          SYSDIG_SECURE_TOKEN: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+      - name: Scan IaC directory (Kubernetes manifests only)
         run: |
-          ./sysdig-cli-scanner --iac --apiurl https://app.au1.sysdig.com .
+          $GITHUB_WORKSPACE/bin/sysdig-cli-scanner \
+            --iac -r --list-unsupported-resources \
+            --apiurl "${SYSDIG_SECURE_URL}" \
+            ./k8s
+        continue-on-error: true # 오류 발생해도 PR 차단 안 함
 
-          continue-on-error: true  # 실패해도 PR 차단 안 함
-
-      # SARIF 업로드(스캔 실패해도 결과 업로드) [1][2]
       - name: Upload SARIF (if generated)
         if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
         continue-on-error: true
+
